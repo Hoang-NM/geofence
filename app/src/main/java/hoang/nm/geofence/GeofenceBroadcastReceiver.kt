@@ -25,7 +25,6 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             Log.e(TAG, errorMessage)
             return
         }
-
         val geofenceTransition = geofencingEvent.geofenceTransition
         val triggeringGeofences = geofencingEvent.triggeringGeofences
         val geofenceDetails = getGeofenceDetails(geofenceTransition, triggeringGeofences)
@@ -33,7 +32,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             context, NotificationManager::class.java
         ) as NotificationManager
 
-        notificationManager.sendGeofenceEnteredNotification(context, geofenceDetails)
+        notificationManager.sendGeofenceTransitionNotification(context, geofenceDetails)
     }
 }
 
@@ -41,16 +40,16 @@ private fun getGeofenceDetails(
     geofenceTransition: Int,
     triggeringGeofences: List<Geofence>
 ): String {
-    val instruction = when(geofenceTransition) {
+    val instruction = when (geofenceTransition) {
         Geofence.GEOFENCE_TRANSITION_ENTER -> "You have entered"
         Geofence.GEOFENCE_TRANSITION_EXIT -> "You have exited"
         Geofence.GEOFENCE_TRANSITION_DWELL -> "You have dwelled"
         else -> "Unknown transition in"
     }
-    return instruction + " ${triggeringGeofences.joinToString()}"
+    return instruction + " ${triggeringGeofences.joinToString { it.requestId }}"
 }
 
-private const val NOTIFICATION_ID = "hoang.nm.geofence"
+private const val NOTIFICATION_ID = 999
 private const val CHANNEL_ID = "GeofenceChannel"
 
 fun Context.createNotificationChannel() {
@@ -62,14 +61,18 @@ fun Context.createNotificationChannel() {
     }
 }
 
-fun NotificationManager.sendGeofenceEnteredNotification(context: Context, details: String) {
+fun NotificationManager.sendGeofenceTransitionNotification(context: Context, details: String) {
 
     val contentIntent = Intent(CUSTOM_INTENT_GEOFENCE)
     val contentPendingIntent = PendingIntent.getActivity(
         context,
         CUSTOM_REQUEST_CODE_GEOFENCE,
         contentIntent,
-        PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        } else {
+            PendingIntent.FLAG_MUTABLE
+        }
     )
 
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -82,5 +85,5 @@ fun NotificationManager.sendGeofenceEnteredNotification(context: Context, detail
         .build()
 
     context.createNotificationChannel()
-    notify(0, builder)
+    notify(NOTIFICATION_ID, builder)
 }

@@ -27,6 +27,10 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private val receiver by lazy {
+        GeofenceBroadcastReceiver()
+    }
+
     private val permissions = arrayOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -54,13 +58,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, IntentFilter(CUSTOM_INTENT_GEOFENCE), RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(receiver, IntentFilter(CUSTOM_INTENT_GEOFENCE))
+        }
         locationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { _ ->
             if (hasLocationPermission()) {
                 setUpGeofenceWithPermission()
             } else {
-                Toast.makeText(this, "no permission", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Location permission is required", Toast.LENGTH_SHORT).show()
             }
         }
         setUpGeofenceWithPermission()
@@ -73,23 +82,28 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             geofenceManager.deregisterGeofence()
         }
+        unregisterReceiver(receiver)
     }
 
     private fun setUpGeofenceWithPermission() {
         if (hasLocationPermission()) {
-            for (geofence in geofenceList) {
-                geofenceManager.addGeofence(
-                    geofence.key,
-                    location = Location("").apply {
-                        latitude = geofence.value.latitude
-                        longitude = geofence.value.longitude
-                    },
-                )
-            }
-            geofenceManager.registerGeofence()
+            setupGeofence()
         } else {
             locationPermissionLauncher?.launch(permissions)
         }
+    }
+
+    private fun setupGeofence() {
+        for (geofence in geofenceList) {
+            geofenceManager.addGeofence(
+                geofence.key,
+                location = Location("").apply {
+                    latitude = geofence.value.latitude
+                    longitude = geofence.value.longitude
+                },
+            )
+        }
+        geofenceManager.registerGeofence()
     }
 
     private fun hasLocationPermission(): Boolean = permissions.all {

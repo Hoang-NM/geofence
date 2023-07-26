@@ -12,9 +12,7 @@ import com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_DWELL
 import com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_ENTER
 import com.google.android.gms.location.Geofence.GEOFENCE_TRANSITION_EXIT
 import com.google.android.gms.location.GeofencingRequest
-import com.google.android.gms.location.GeofencingRequest.INITIAL_TRIGGER_DWELL
 import com.google.android.gms.location.GeofencingRequest.INITIAL_TRIGGER_ENTER
-import com.google.android.gms.location.GeofencingRequest.INITIAL_TRIGGER_EXIT
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.tasks.await
 
@@ -39,10 +37,12 @@ class GeofenceManager(context: Context) {
     fun addGeofence(
         key: String,
         location: Location,
-        radiusInMeters: Float = 10.0f, // 100.0f
-        expirationTimeInMillis: Long = Long.MAX_VALUE, // 30 * 60 * 1000
+        radiusInMeters: Float = 100.0f,
+        expirationTimeInMillis: Long = 30 * 60 * 1000,
+        loiteringDelay: Int = 60 * 1000,
     ) {
-        geofenceList[key] = createGeofence(key, location, radiusInMeters, expirationTimeInMillis)
+        geofenceList[key] =
+            createGeofence(key, location, radiusInMeters, expirationTimeInMillis, loiteringDelay)
     }
 
     fun removeGeofence(key: String) {
@@ -66,7 +66,7 @@ class GeofenceManager(context: Context) {
 
     private fun createGeofencingRequest(): GeofencingRequest {
         return GeofencingRequest.Builder().apply {
-            setInitialTrigger(INITIAL_TRIGGER_ENTER or INITIAL_TRIGGER_EXIT or INITIAL_TRIGGER_DWELL)
+            setInitialTrigger(INITIAL_TRIGGER_ENTER)
             addGeofences(geofenceList.values.toList())
         }.build()
     }
@@ -76,12 +76,14 @@ class GeofenceManager(context: Context) {
         location: Location,
         radiusInMeters: Float,
         expirationTimeInMillis: Long,
+        loiteringDelay: Int,
     ): Geofence {
         return Geofence.Builder()
             .setRequestId(key)
             .setCircularRegion(location.latitude, location.longitude, radiusInMeters)
             .setExpirationDuration(expirationTimeInMillis)
             .setTransitionTypes(GEOFENCE_TRANSITION_ENTER or GEOFENCE_TRANSITION_EXIT or GEOFENCE_TRANSITION_DWELL)
+            .setLoiteringDelay(loiteringDelay)
             .build()
     }
 
