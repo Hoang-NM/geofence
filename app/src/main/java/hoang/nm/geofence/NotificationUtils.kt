@@ -22,7 +22,7 @@ fun Context.createNotificationChannel() {
 
 fun NotificationManager.sendGeofenceTransitionNotification(context: Context, details: String) {
 
-    val contentIntent = Intent(CUSTOM_INTENT_GEOFENCE)
+    val contentIntent = Intent(context, MainActivity::class.java)
     val contentPendingIntent = PendingIntent.getActivity(
         context,
         CUSTOM_REQUEST_CODE_GEOFENCE,

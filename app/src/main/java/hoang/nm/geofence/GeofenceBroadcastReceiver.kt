@@ -34,7 +34,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
 private fun getGeofenceDetails(
     geofenceTransition: Int,
-    triggeringGeofences: List<Geofence>
+    triggeringGeofences: List<Geofence>,
 ): String {
     val instruction = when (geofenceTransition) {
         Geofence.GEOFENCE_TRANSITION_ENTER -> "You have entered"
@@ -42,5 +42,5 @@ private fun getGeofenceDetails(
         Geofence.GEOFENCE_TRANSITION_DWELL -> "You have dwelled"
         else -> "Unknown transition in"
     }
-    return instruction + " ${triggeringGeofences.joinToString { it.requestId }}"
+    return instruction + " ${triggeringGeofences.first().requestId}"
 }

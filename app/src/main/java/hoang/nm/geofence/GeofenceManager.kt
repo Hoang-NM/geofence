@@ -19,13 +19,13 @@ import kotlinx.coroutines.tasks.await
 class GeofenceManager(context: Context) {
     private val TAG = "GeofenceManager"
     private val client = LocationServices.getGeofencingClient(context)
-    val geofenceList = mutableMapOf<String, Geofence>()
+    private val geofenceList = mutableMapOf<String, Geofence>()
 
     private val geofencingPendingIntent by lazy {
         PendingIntent.getBroadcast(
             context,
             CUSTOM_REQUEST_CODE_GEOFENCE,
-            Intent(CUSTOM_INTENT_GEOFENCE),
+            Intent(context, GeofenceBroadcastReceiver::class.java),
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
                 PendingIntent.FLAG_UPDATE_CURRENT
             } else {
