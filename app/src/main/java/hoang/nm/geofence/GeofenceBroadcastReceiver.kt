@@ -15,14 +15,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     private val TAG = "GeofenceBroadcastReceiver"
 
     override fun onReceive(context: Context, intent: Intent) {
-        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+        val geofencingEvent = GeofencingEvent.fromIntent(intent) ?: return
         if (geofencingEvent.hasError()) {
             val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
             Log.e(TAG, errorMessage)
             return
         }
         val geofenceTransition = geofencingEvent.geofenceTransition
-        val triggeringGeofences = geofencingEvent.triggeringGeofences
+        val triggeringGeofences = geofencingEvent.triggeringGeofences ?: emptyList()
         val geofenceDetails = getGeofenceDetails(geofenceTransition, triggeringGeofences)
         val notificationManager = ContextCompat.getSystemService(
             context, NotificationManager::class.java

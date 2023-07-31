@@ -59,7 +59,7 @@ class GeofenceManager(context: Context) {
             }
     }
 
-    suspend fun deregisterGeofence() = kotlin.runCatching {
+    suspend fun deregisterGeofence() = runCatching {
         client.removeGeofences(geofencingPendingIntent).await()
         geofenceList.clear()
     }
